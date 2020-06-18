@@ -240,7 +240,7 @@ class TimeFreqResourceAllocationV0(Env):
             if self.tti == self.tti_next_pkt[u]:
                 buffer_gaps = np.where(self.s[u, :] == 0)[0]  # Find slots for packets in the queue.
                 if buffer_gaps.size == 0:  # Large negative rwd unnecessary b/c rwd is already max due to full buffer.
-                    print(f"Buffer overflow. Disregarding new GBR (Conversational Voice) packet for UE {u}.")
+                    # print(f"Buffer overflow. Disregarding new GBR (Conversational Voice) packet for UE {u}.")
                     g = None
                 else:
                     g = buffer_gaps[0]  # First available slot in buffer

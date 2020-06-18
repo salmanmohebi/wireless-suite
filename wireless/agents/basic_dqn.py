@@ -8,7 +8,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
 
 np.random.seed(1)
-tf.random.set_seed(1)
+# tf.random.set_seed(1)
 
 
 class MyModel(Model):
@@ -77,7 +77,7 @@ class BasicDQNAgent:
 
         state_b, action_b, next_state_b = np.stack(state_b), np.stack(action_b), np.stack(next_state_b)
 
-        target_q = reward_b + self.gamma * np.amax(self.target_network.predict(next_state_b), axis=1) * (1 - done_b)
+        target_q = reward_b + self.gamma * np.amax(self.target_network.predict(next_state_b.astype(float)), axis=1) * (1 - done_b)
         target_v = self.q_network.predict(state_b)
         target_v[range(self.batch_size), action_b] = target_q
         losses = self.q_network.train_on_batch(state_b, target_v)
@@ -86,7 +86,7 @@ class BasicDQNAgent:
     def epsilon_greedy(self, obs):
         if np.random.rand() < self.epsilon:
             return self.action_space.sample()
-        return int(np.argmax(self.q_network.predict(obs[None]), axis=-1)[0])
+        return int(np.argmax(self.q_network.predict(obs[None].astype(float)), axis=-1)[0])
 
     def update_target_network(self):
         self.target_network.set_weights(self.q_network.get_weights())
