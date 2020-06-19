@@ -51,32 +51,21 @@ def main(_run):
                    it=_run.config['env']['non_gbr_traffic_mean_interarrival_time_ttis'])  # Init environment
 
     agent = BasicDQNAgent(state_size=len(env.reset()), action_space=env.action_space)
-    # Simulate
-    total_steps = 0
-    for ep in range(1, n_eps):  # Run episodes
-        state = env.reset()
-        for t in range(t_max):  # Run one episode
-            total_steps += 1
-            action = agent.epsilon_greedy(state)
-            new_state, reward, done, _ = env.step(action)
-            agent.experience_replay.store([state, action, reward, new_state, done])
-            state = new_state
-            if agent.experience_replay.size > agent.batch_size:
-                agent.train_network()
-            if total_steps % agent.target_update_interval == 0:
-                agent.update_target_network()
-            rwd[ep, t] = reward
-            if done:
-                break
-        if ep % 10 == 0:
-            print(f'Average reward in ep: {ep} : {np.mean(rwd[ep, :]):2f}, '
-                  f'Average reward by now : {np.mean(rwd[:ep, :]):2f}')
-            agent.target_network.save_weights(join(MODEL_PATH, f'model_{ep}.h5'))
+    result = list()
+    for model in range(10, n_eps, 10):
+        agent.q_network.load_weights(join(MODEL_PATH, f'model_{model}.h5'))
+        for ep in range(1, n_eps):  # Run episodes
+            state = env.reset()
+            for t in range(t_max):  # Run one episode
+                action = agent.act(state)
+                new_state, reward, done, _ = env.step(action)
+                state = new_state
+                rwd[ep, t] = reward
+                if done:
+                    break
+        result.append(np.mean(rwd))
 
-    np.save(join(MODEL_PATH, 'reward.npy'), rwd)
-    result = np.mean(rwd)  # Save experiment result
-
-    print(f"Result: {result}")
-    # plt.plot(range(n_eps), np.sum(rwd, axis=1))
-    # plt.show()
-    return result
+        print(f"Result for model {len(result)}: {result[-1]}")
+        if len(result) % 10 == 0:
+            plt.plot(range(len(result)), result)
+            plt.show()

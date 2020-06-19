@@ -13,7 +13,7 @@ class TimeFreqResourceAllocationV1(TimeFreqResourceAllocationV0):
         buffer_size_per_ue = np.sum(s, axis=1)
 
         e = np.reshape(state[self.K * (1 + self.L):self.K * (1 + 2 * self.L)], (self.K, self.L))  # Packet ages in TTIs
-        oldest_packet = np.max(e, axis=1)  # Age of oldest packet for each UE
+        oldest_packet = np.max(e, axis=1)/self.t_max  # Age of oldest packet for each UE
 
         qi_ohe = np.reshape(state[self.K + 2 * self.K * self.L:5 * self.K + 2 * self.K * self.L], (self.K, 4))
         qi = np.array([np.where(r == 1)[0][0] for r in qi_ohe])  # Decode One-Hot-Encoded QIs
@@ -26,6 +26,6 @@ class TimeFreqResourceAllocationV1(TimeFreqResourceAllocationV0):
         b[qi == 1] = 30
         b[qi == 0] = 300
 
-        new_state = np.concatenate((cqi, buffer_size_per_ue, oldest_packet, qi))
+        new_state = np.concatenate((cqi, buffer_size_per_ue, oldest_packet, b/300))
 
         self.state = new_state

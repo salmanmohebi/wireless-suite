@@ -2,27 +2,9 @@ import random
 from collections import deque
 
 import numpy as np
-import tensorflow as tf
 from tensorflow.keras.layers import Dense
-from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
-
-np.random.seed(1)
-# tf.random.set_seed(1)
-
-
-class MyModel(Model):
-    def __init__(self, num_actions):
-        super().__init__(name='simple_dqn')
-        self.hidden1 = Dense(32, name='dense1', activation='relu', kernel_initializer='he_uniform')
-        self.hidden2 = Dense(32, name='dense2', activation='relu', kernel_initializer='he_uniform')
-        self.logits = Dense(num_actions, name='logits')
-
-    def call(self, inputs, training=None, mask=None):
-        x = self.hidden1(inputs)
-        x = self.hidden2(x)
-        x = self.logits(x)
-        return x
+from tensorflow.keras.models import Sequential
 
 
 class ExperienceReplay:
@@ -46,7 +28,8 @@ class ExperienceReplay:
 class BasicDQNAgent:
     def __init__(
             self,
-            online_model, target_network, action_space,
+            state_size,
+            action_space,
             memory_size=500,
             learning_rate=0.015,
             epsilon=0.05,
@@ -55,14 +38,9 @@ class BasicDQNAgent:
             target_update_interval=400,
             max_episodes=200,
     ):
-        self.q_network = online_model
-        self.target_network = target_network
-
-        self.q_network.compile(
-            optimizer=Adam(learning_rate=learning_rate), loss='mse'
-        )
-
+        self.state_size = state_size
         self.action_space = action_space
+
         self.lr = learning_rate
         self.epsilon = epsilon
         self.gamma = gamma
@@ -71,6 +49,24 @@ class BasicDQNAgent:
         self.max_episodes = max_episodes
 
         self.experience_replay = ExperienceReplay(memory_size=memory_size)
+        self.q_network = self.build_network()
+        self.target_network = self.build_network()
+
+        self.q_network.compile(
+            optimizer=Adam(learning_rate=learning_rate), loss='mse'
+        )
+        self.update_target_network()
+
+    def build_network(self):
+        model = Sequential(
+            [
+                Dense(128, input_shape=(self.state_size,), name='dense1', activation='relu',
+                      kernel_initializer='he_uniform'),
+                Dense(128, name='dense2', activation='relu', kernel_initializer='he_uniform'),
+                Dense(self.action_space.n, name='logits')
+            ]
+        )
+        return model
 
     def train_network(self):
         state_b, action_b, reward_b, next_state_b, done_b = self.experience_replay.sample(self.batch_size).T
@@ -86,7 +82,10 @@ class BasicDQNAgent:
     def epsilon_greedy(self, obs):
         if np.random.rand() < self.epsilon:
             return self.action_space.sample()
-        return int(np.argmax(self.q_network.predict(obs[None].astype(float)), axis=-1)[0])
+        return self.act(obs)
 
     def update_target_network(self):
         self.target_network.set_weights(self.q_network.get_weights())
+
+    def act(self, obs, reward=None, done=None):
+        return np.argmax(self.q_network.predict(obs[None].astype(float)), axis=-1)[0]
