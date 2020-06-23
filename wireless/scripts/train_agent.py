@@ -13,7 +13,7 @@ from wireless.agents.proportional_fair import *
 from wireless.agents.basic_dqn import *
 
 
-MODEL_PATH = '../../models_friday/'
+MODEL_PATH = '../../models_tuesday/'
 
 # Load agent parameters
 with open('../../config/config_agent.json') as f:
@@ -44,11 +44,12 @@ def main(_run):
     t_max = _run.config['agent']['t_max']
     rwd = np.zeros((n_eps, t_max))  # Memory allocation
 
-    env = gym.make('TimeFreqResourceAllocation-v0', n_ues=_run.config['env']['n_ues'],
+    env = gym.make('TimeFreqResourceAllocation-v1', n_ues=_run.config['env']['n_ues'],
                    n_prbs=_run.config['env']['n_prbs'], buffer_max_size=_run.config['env']['buffer_max_size'],
                    eirp_dbm=_run.config['env']['eirp_dbm'], f_carrier_mhz=_run.config['env']['f_carrier_mhz'],
                    max_pkt_size_bits=_run.config['env']['max_pkt_size_bits'],
                    it=_run.config['env']['non_gbr_traffic_mean_interarrival_time_ttis'])  # Init environment
+
 
     agent = BasicDQNAgent(state_size=len(env.reset()), action_space=env.action_space)
     # Simulate
@@ -63,20 +64,31 @@ def main(_run):
             state = new_state
             if agent.experience_replay.size > agent.batch_size:
                 agent.train_network()
+
             if total_steps % agent.target_update_interval == 0:
+                agent.update_epsilon()
+                # agent.update_lr()
                 agent.update_target_network()
             rwd[ep, t] = reward
             if done:
                 break
         if ep % 10 == 0:
             print(f'Average reward in ep: {ep} : {np.mean(rwd[ep, :]):2f}, '
-                  f'Average reward by now : {np.mean(rwd[:ep, :]):2f}')
+                  f'Average reward by now : {np.mean(rwd[:ep, :]):2f}, '
+                  f'Learning rate: {agent.lr}, '
+                  f'Epsilon: {agent.epsilon}'
+                  )
             agent.target_network.save_weights(join(MODEL_PATH, f'model_{ep}.h5'))
 
-    np.save(join(MODEL_PATH, 'reward.npy'), rwd)
+            np.save(join(MODEL_PATH, f'reward.npy'), rwd)
+
+            plt.plot(range(ep), np.sum(rwd, axis=1)[:ep])
+            # plt.show()
+            plt.savefig(join(MODEL_PATH, f'fig_{ep}.png'))
+            plt.clf()
+
     result = np.mean(rwd)  # Save experiment result
 
     print(f"Result: {result}")
-    # plt.plot(range(n_eps), np.sum(rwd, axis=1))
-    # plt.show()
+
     return result

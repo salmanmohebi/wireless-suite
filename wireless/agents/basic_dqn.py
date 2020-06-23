@@ -30,11 +30,15 @@ class BasicDQNAgent:
             self,
             state_size,
             action_space,
-            memory_size=500,
-            learning_rate=0.015,
-            epsilon=0.05,
-            gamma=0.95,
-            batch_size=32,
+            memory_size=10**5,
+            learning_rate=1e-3,
+            learning_rate_decay=1e-4,
+            min_learning_rate=1e-4,
+            epsilon=1e-2,
+            epsilon_decay=1e-4,
+            min_epsilon=1e-4,
+            gamma=0.99,
+            batch_size=128,
             target_update_interval=400,
             max_episodes=200,
     ):
@@ -42,7 +46,11 @@ class BasicDQNAgent:
         self.action_space = action_space
 
         self.lr = learning_rate
+        self.lr_decay = learning_rate_decay
+        self.min_lr = min_learning_rate
         self.epsilon = epsilon
+        self.epsilon_decay = epsilon_decay
+        self.min_epsilon = min_epsilon
         self.gamma = gamma
         self.batch_size = batch_size
         self.target_update_interval = target_update_interval
@@ -83,6 +91,12 @@ class BasicDQNAgent:
         if np.random.rand() < self.epsilon:
             return self.action_space.sample()
         return self.act(obs)
+
+    def update_epsilon(self):
+        self.epsilon = max(self.epsilon - self.epsilon_decay, self.min_epsilon)
+
+    def update_lr(self):
+        self.lr = max(self.lr - self.lr_decay, self.min_lr)
 
     def update_target_network(self):
         self.target_network.set_weights(self.q_network.get_weights())

@@ -10,7 +10,7 @@ class TimeFreqResourceAllocationV1(TimeFreqResourceAllocationV0):
         # Sizes in bits of packets in UEs' buffers
         s = np.reshape(state[self.K:self.K * (1 + self.L)], (self.K, self.L))
         # TODO: use number of packet instead of buffer size? maybe!
-        buffer_size_per_ue = np.sum(s, axis=1)
+        buffer_size_per_ue = np.sum(s, axis=1)/self.max_pkt_size_bits
 
         e = np.reshape(state[self.K * (1 + self.L):self.K * (1 + 2 * self.L)], (self.K, self.L))  # Packet ages in TTIs
         oldest_packet = np.max(e, axis=1)/self.t_max  # Age of oldest packet for each UE
