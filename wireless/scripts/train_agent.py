@@ -62,7 +62,7 @@ def main(_run):
             new_state, reward, done, _ = env.step(action)
             agent.experience_replay.store([state, action, reward, new_state, done])
             state = new_state
-            if agent.experience_replay.size > agent.batch_size:
+            if agent.experience_replay.size > 2*agent.batch_size:
                 agent.train_network()
 
             if total_steps % agent.target_update_interval == 0:
@@ -79,12 +79,11 @@ def main(_run):
                   f'Epsilon: {agent.epsilon}'
                   )
             agent.target_network.save_weights(join(MODEL_PATH, f'model_{ep}.h5'))
-
             np.save(join(MODEL_PATH, f'reward.npy'), rwd)
 
-            plt.plot(range(ep), np.sum(rwd, axis=1)[:ep])
+            plt.plot(range(ep), np.mean(rwd, axis=1)[:ep])
             # plt.show()
-            plt.savefig(join(MODEL_PATH, f'fig_{ep}.png'))
+            plt.savefig(join(MODEL_PATH, f'fig.png'))
             plt.clf()
 
     result = np.mean(rwd)  # Save experiment result

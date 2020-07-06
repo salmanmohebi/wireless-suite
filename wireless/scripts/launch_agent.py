@@ -13,6 +13,9 @@ from sacred.observers import MongoObserver
 from wireless.agents.random_agent import RandomAgent
 from wireless.agents.round_robin_agent import *
 from wireless.agents.proportional_fair import *
+from wireless.agents.basic_dqn import *
+
+MODEL_PATH = '../models/model.h5'
 
 # Load agent parameters
 with open('../../config/config_agent.json') as f:
@@ -63,6 +66,9 @@ def main(_run):
             agent = RoundRobinIfTrafficAgent(env.action_space, env.K, env.L)
         elif ac["agent"]["agent_type"] == "proportional fair":
             agent = ProportionalFairAgent(env.action_space, env.K, env.L)
+        elif ac["agent"]["agent_type"] == "basic dqn":
+            agent = BasicDQNAgent(state_size=len(env.reset()), action_space=env.action_space)
+            agent.q_network.load_weights(MODEL_PATH)
         else:
             raise NotImplemented
 

@@ -34,12 +34,12 @@ class BasicDQNAgent:
             learning_rate=1e-3,
             learning_rate_decay=1e-4,
             min_learning_rate=1e-4,
-            epsilon=1e-2,
-            epsilon_decay=1e-4,
+            epsilon=1e-1,
+            epsilon_decay=1e-5,
             min_epsilon=1e-4,
             gamma=0.99,
             batch_size=128,
-            target_update_interval=400,
+            target_update_interval=600,
             max_episodes=200,
     ):
         self.state_size = state_size
