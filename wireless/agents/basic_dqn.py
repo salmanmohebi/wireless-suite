@@ -93,7 +93,9 @@ class BasicDQNAgent:
         return self.act(obs)
 
     def update_epsilon(self):
-        self.epsilon = max(self.epsilon - self.epsilon_decay, self.min_epsilon)
+        if self.epsilon > self.min_epsilon:
+            self.epsilon *= self.min_epsilon
+        # self.epsilon = max(self.epsilon - self.epsilon_decay, self.min_epsilon)
 
     def update_lr(self):
         self.lr = max(self.lr - self.lr_decay, self.min_lr)
