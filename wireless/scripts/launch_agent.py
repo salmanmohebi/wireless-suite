@@ -46,7 +46,7 @@ def main(_run):
 
     # Simulate
     for ep in range(n_eps):  # Run episodes
-        env = gym.make('TimeFreqResourceAllocation-v0', n_ues=_run.config['env']['n_ues'],
+        env = gym.make('TimeFreqResourceAllocation-v1', n_ues=_run.config['env']['n_ues'],
                        n_prbs=_run.config['env']['n_prbs'], buffer_max_size=_run.config['env']['buffer_max_size'],
                        eirp_dbm=_run.config['env']['eirp_dbm'], f_carrier_mhz=_run.config['env']['f_carrier_mhz'],
                        max_pkt_size_bits=_run.config['env']['max_pkt_size_bits'],
