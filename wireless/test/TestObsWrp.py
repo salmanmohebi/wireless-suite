@@ -8,17 +8,18 @@ import random
 
 import gym
 import numpy as np
+from wireless.scripts.train_naive_dqn import ObservationWrapper
 
 
 @pytest.fixture
 def env():
-    env = gym.make('TimeFreqResourceAllocation-v1')  # Init environment
+    env = ObservationWrapper(gym.make('TimeFreqResourceAllocation-v0'))  # Init environment
     yield env
 
 
 @pytest.fixture
 def env64():
-    env = gym.make('TimeFreqResourceAllocation-v1', n_ues=64)  # Init environment
+    env = (gym.make('TimeFreqResourceAllocation-v0', n_ues=64))  # Init environment
     yield env
 
 
@@ -26,7 +27,7 @@ class TestTfraV1:
     def test_state_features(self):
         n_ues = 64
         n_steps = 512
-        env = gym.make('TimeFreqResourceAllocation-v1', n_ues=n_ues, eirp_dbm=7)  # Low power to have some CQI=0
+        env = ObservationWrapper(gym.make('TimeFreqResourceAllocation-v0', n_ues=n_ues, eirp_dbm=7))  # Low power to have some CQI=0
         env.seed(seed=1234)
 
         state, _, _, _ = env.step(0)  # Get state to measure its length
