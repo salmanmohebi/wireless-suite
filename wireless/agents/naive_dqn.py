@@ -66,16 +66,23 @@ class NaiveDQNAgent:
     def train(self, n_episodes, max_steps, save_path=None):
         logging.info(f'Start to train agent at {datetime.datetime.now()}')
         init_epsilon, rewards = self.epsilon, list()
+        temporal_memory = list()
         for ep in range(1, n_episodes+1):
             state, ep_reward = self.env.reset(), 0
-            for step in range(max_steps):
+            for step in range(1, max_steps):
                 action = self.epsilon_greedy(state)
                 next_state, reward, done, _ = self.env.step(action)
                 ep_reward += reward
-                self.experience_replay.store([state, action, reward, next_state, done])
-                state = next_state
-                if self.experience_replay.size > 2 * self.batch_size:
+                temporal_memory.append([state, action, reward, next_state, done])
+                if step % self.env.Nf == 0:
+                    while len(temporal_memory) > 0:
+                        transition = temporal_memory.pop(0)
+                        transition[2] = reward
+                        self.experience_replay.store(transition)
+
+                if self.experience_replay.size > 2 * self.batch_size:  # TODO: maybe moving this inside the above if
                     self.train_network()
+                state = next_state
                 if done:
                     break
             rewards.append(ep_reward)
