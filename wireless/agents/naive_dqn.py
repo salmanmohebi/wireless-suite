@@ -36,9 +36,9 @@ class NaiveDQNAgent:
     def build_network(self, input_size, output_size):
         model = Sequential(
             [
-                Dense(128, input_shape=(input_size,), name='dense1', activation='relu',
+                Dense(256, input_shape=(input_size,), name='dense1', activation='relu',
                       kernel_initializer='he_uniform'),
-                Dense(128, name='dense2', activation='relu', kernel_initializer='he_uniform'),
+                Dense(256, name='dense2', activation='relu', kernel_initializer='he_uniform'),
                 Dense(output_size, name='logits')
             ]
         )

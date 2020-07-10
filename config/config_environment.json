@@ -1,7 +1,7 @@
 {
   "env": {
-    "n_ues": 32,
-    "n_prbs": 25,
+    "n_ues": 8,
+    "n_prbs": 5,
     "buffer_max_size": 8,
     "eirp_dbm": 13,
     "f_carrier_mhz": 2655,
