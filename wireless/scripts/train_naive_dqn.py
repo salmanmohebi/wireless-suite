@@ -35,7 +35,7 @@ class ObservationWrapper(gym.ObservationWrapper):
 
         # Normalized age of oldest packet size for each UE
         e = np.reshape(observation[self.K * (1 + self.L):self.K * (1 + 2 * self.L)], (self.K, self.L))  # Packet ages in TTIs
-        oldest_packet = np.max(e, axis=1) / self.t_max
+        oldest_packet = np.max(e, axis=1) / (self.t_max / self.self.Nf)
 
         bi = [300, 30, 150, 100]  # delay budget index
         qi_ohe = np.reshape(observation[self.K + 2 * self.K * self.L:5 * self.K + 2 * self.K * self.L], (self.K, 4))
