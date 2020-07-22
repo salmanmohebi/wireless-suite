@@ -13,7 +13,7 @@ from wireless.utils.experience_replay import ExperienceReplay
 
 class NaiveDQNAgent:
     def __init__(self, env, memory_size=10**5, learning_rate=1e-3, epsilon=0.5, epsilon_decay=1e-2,
-                 min_epsilon=1e-4, gamma=0.99, batch_size=128, target_update_interval=10):
+                 min_epsilon=1e-4, gamma=0.99, batch_size=128, target_update_interval=2):
 
         self.env = env
 
@@ -86,7 +86,7 @@ class NaiveDQNAgent:
                 state = next_state
                 if done:
                     break
-            rewards.append(ep_reward)
+            rewards.append(ep_reward/max_steps)
             if ep % self.target_update_interval:
                 self.update_target_network()
 

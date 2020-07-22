@@ -17,8 +17,8 @@ with open('../../config/config_environment.json') as f:
     ec = json.load(f)
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-e', '--n_episodes', type=int, default=10)
-parser.add_argument('-t', '--max_steps', type=int, default=1000)
+parser.add_argument('-e', '--n_episodes', type=int, default=1000)
+parser.add_argument('-t', '--max_steps', type=int, default=2500)
 parser.add_argument('-p', '--save_path', type=str, default=None)
 
 
@@ -27,21 +27,35 @@ class ObservationWrapper(gym.ObservationWrapper):
         super(ObservationWrapper, self).__init__(env)
 
     def observation(self, observation):
-        # Channel Quality Indicator (CQI) normalized to [0, 1]
-        cqi = observation[0:self.K] / 15
-        # Normalized sizes in bits of packets in UEs' buffers
+        # Channel Quality Indicator (CQI)
+        cqi = observation[0:self.K]
+        # Sizes in bits of packets in UEs' buffers
         s = np.reshape(observation[self.K:self.K * (1 + self.L)], (self.K, self.L))
-        ue_buffers_size = np.sum(s, axis=1) / (self.max_pkt_size_bits * self.L)
+        # ue_buffers_size = np.sum(s, axis=1)
+        ue_buffers_size = np.sum(s, axis=1)/(self.max_pkt_size_bits * self.L)
 
-        # Normalized age of oldest packet size for each UE
+        # Combine the CQI with the buffer size
+        observed_buffer_size = np.array([0 if j == 0 else i / j for i, j in zip(ue_buffers_size, cqi)])
+        if np.max(observed_buffer_size) > 0:
+            observed_buffer_size = observed_buffer_size / np.max(observed_buffer_size)
+
+        # Age of oldest packet size for each UE
         e = np.reshape(observation[self.K * (1 + self.L):self.K * (1 + 2 * self.L)], (self.K, self.L))  # Packet ages in TTIs
-        oldest_packet = np.max(e, axis=1) / (self.t_max / self.self.Nf)
+        # oldest_packet = np.max(e, axis=1) / (self.t_max / self.Nf)
+        oldest_packet = np.max(e, axis=1)
 
         bi = [300, 30, 150, 100]  # delay budget index
         qi_ohe = np.reshape(observation[self.K + 2 * self.K * self.L:5 * self.K + 2 * self.K * self.L], (self.K, 4))
-        b = np.array([bi[np.where(r == 1)[0][0]] for r in qi_ohe]) / np.max(bi)  # Convert QI to delay budget
+        b = np.array([bi[np.where(r == 1)[0][0]] for r in qi_ohe])  # Convert QI to delay budget
 
-        new_obs = np.concatenate((cqi, ue_buffers_size, oldest_packet, b))
+        # Combine the age of packets with the delay bound
+        observed_ages = oldest_packet / b
+        if np.max(observed_ages) > 0:
+            observed_ages = observed_ages / np.max(observed_ages)
+
+        new_obs = np.concatenate((observed_buffer_size, observed_ages))
+
+        assert (observed_buffer_size <= 1).all()
         return new_obs
 
 
