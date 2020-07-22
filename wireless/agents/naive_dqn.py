@@ -12,13 +12,14 @@ from wireless.utils.experience_replay import ExperienceReplay
 
 
 class NaiveDQNAgent:
-    def __init__(self, env, memory_size=10**5, learning_rate=1e-3, epsilon=5e-2, min_epsilon=1e-4,
-                 gamma=0.99, batch_size=128, target_update_interval=10):
+    def __init__(self, env, memory_size=10**5, learning_rate=1e-3, epsilon=0.5, epsilon_decay=1e-2,
+                 min_epsilon=1e-4, gamma=0.99, batch_size=128, target_update_interval=10):
 
         self.env = env
 
         self.lr = learning_rate
         self.epsilon = epsilon
+        self.epsilon_decay = epsilon_decay
         self.min_epsilon = min_epsilon
         self.gamma = gamma
         self.batch_size = batch_size
@@ -80,8 +81,8 @@ class NaiveDQNAgent:
                         transition[2] = reward
                         self.experience_replay.store(transition)
 
-                if self.experience_replay.size > 2 * self.batch_size:  # TODO: maybe moving this inside the above if
-                    self.train_network()
+                    if self.experience_replay.size > 2 * self.batch_size:
+                        self.train_network()
                 state = next_state
                 if done:
                     break
@@ -90,8 +91,8 @@ class NaiveDQNAgent:
                 self.update_target_network()
 
             #  Decay epsilon
-            decay_factor = max((n_episodes - ep) / n_episodes, 0)
-            self.epsilon = (init_epsilon - self.min_epsilon) * decay_factor + self.min_epsilon
+            if self.epsilon > self.min_epsilon:
+                self.epsilon = init_epsilon * (1 - self.epsilon_decay)**ep
 
             logging.info(f'Episode: {ep}/{n_episodes}, reward: {ep_reward} '
                          f'(mean: {ep_reward / max_steps}, average mean: {np.mean(rewards) / max_steps:2f}), '
